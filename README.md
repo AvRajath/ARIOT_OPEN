@@ -1,2 +1,4 @@
 # ARIOT
 AUGMENTED REALITY RENDERED FOR  IOT APPLICATIONS
+
+Scripts to control Unity Scene
