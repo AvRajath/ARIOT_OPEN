@@ -13,3 +13,12 @@ src------
 	
 	Touch_sensor.py:
 		This is used to get data from touch sensors to GPIO pins of the RaspberryPi
+
+Hardware Used :
+		--RPI Zero W 
+		--Touch Sensors(2)
+		--Pi-Camera
+
+		RPi zero has to be running raspian os/ any linux kernel and python installed in it.
+
+		Touch Sensors to be connected to GPIO pins of the Pi Zero

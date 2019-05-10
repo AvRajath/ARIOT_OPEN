@@ -4,3 +4,4 @@ Also, Need to configure the code with SSID and password for connecting it to the
 Also, Provide appropriate Credentials to the Firebase account the user has created
 (currently file consists of a firebase token which is used for development purpose)
 
+Hardware Used: A relay module and ESP8266 conncted to WIFI network
