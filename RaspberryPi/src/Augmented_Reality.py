@@ -1,23 +1,20 @@
 
-# Useful links
-# http://www.pygame.org/wiki/OBJFileLoader
-# https://rdmilligan.wordpress.com/2015/10/15/augmented-reality-using-opencv-opengl-and-blender/
-# https://clara.io/library
-
-# TODO -> Implement command line arguments (scale, model and object to be projected)
-#      -> Refactor and organize code (proper funcition definition and separation, classes, error handling...)
-
 import argparse
 
 import cv2
 import numpy as np
 import math
 import os
-import objloader_simple as ob
+from ob_load import *
+
+from firebase import firebase
+
+#Our firebase Url where we can update our context status
+firebase_url = 'https://ariot-5cdcc.firebaseio.com/'
 
 # Minimum number of matches that have to be found
 # to consider the recognition valid
-MIN_MATCHES = 130
+MIN_MATCHES = 150
 
 
 def main():
@@ -28,19 +25,21 @@ def main():
     # matrix of camera parameters (made up but works quite well for me) 
     camera_parameters = np.array([[800, 0, 320], [0, 800, 240], [0, 0, 1]])
     # create ORB keypoint detector
-    orb = cv2.ORB()
+    orb = cv2.ORB_create()
     # create BFMatcher object based on hamming distance  
     bf = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True)
     # load the reference surface that will be searched in the video stream
-    # dir_name = os.getcwd()
-    # model = cv2.imread(os.path.join(dir_name, '../reference/id.jpg'), 0)
-    model = cv2.imread('C:/Users/RG067839/Desktop/ARIOT/RPI/reference/id.jpg', 0)
+    dir_name = os.getcwd()
+    model = cv2.imread(os.path.join(dir_name, 'reference/model.jpg'), 0)
     # Compute model keypoints and its descriptors
     kp_model, des_model = orb.detectAndCompute(model, None)
     # Load 3D model from OBJ file
-    obj = ob.OBJ('C:/Users/RG067839/Desktop/ARIOT/RPI/models/fox.obj', swapyz=True)  
-    # init video capture
-    cap = cv2.VideoCapture(0)
+    obj = OBJ(os.path.join(dir_name, 'models/fox.obj'), swapyz=True)  
+    # init video capture from IP source(local streaming)
+    cap = cv2.VideoCapture("http://192.168.43.70:8080/?action=stream")
+
+    #Initialize firebase to start communication
+    fb = firebase.FirebaseApplication(firebase_url, None)
 
     while True:
         # read the current frame
@@ -50,6 +49,8 @@ def main():
             return 
         # find and draw the keypoints of the frame
         kp_frame, des_frame = orb.detectAndCompute(frame, None)
+        if des_frame is None:
+        	continue
         # match frame descriptors with model descriptors
         matches = bf.match(des_model, des_frame)
         # sort them in the order of their distance
@@ -62,6 +63,9 @@ def main():
             src_pts = np.float32([kp_model[m.queryIdx].pt for m in matches]).reshape(-1, 1, 2)
             dst_pts = np.float32([kp_frame[m.trainIdx].pt for m in matches]).reshape(-1, 1, 2)
             # compute Homography
+            print("found")
+            #Update the Context field with Appliance found
+            fb.put("","Context","Appliance-1")
             homography, mask = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC, 5.0)
             if args.rectangle:
                 # Draw a rectangle that marks the found model in the frame
@@ -91,6 +95,8 @@ def main():
 
         else:
             print "Not enough matches found - %d/%d" % (len(matches), MIN_MATCHES)
+            #if no appliance found then update NONE on the cloud
+            fb.put("","Context","NONE")
 
     cap.release()
     cv2.destroyAllWindows()
@@ -159,15 +165,14 @@ def hex_to_rgb(hex_color):
 
 
 # Command line argument parsing
-# NOT ALL OF THEM ARE SUPPORTED YET
+
 parser = argparse.ArgumentParser(description='Augmented reality application')
 
 parser.add_argument('-r','--rectangle', help = 'draw rectangle delimiting target surface on frame', action = 'store_true')
 parser.add_argument('-mk','--model_keypoints', help = 'draw model keypoints', action = 'store_true')
 parser.add_argument('-fk','--frame_keypoints', help = 'draw frame keypoints', action = 'store_true')
 parser.add_argument('-ma','--matches', help = 'draw matches between keypoints', action = 'store_true')
-# TODO jgallostraa -> add support for model specification
-#parser.add_argument('-mo','--model', help = 'Specify model to be projected', action = 'store_true')
+
 
 args = parser.parse_args()
 
