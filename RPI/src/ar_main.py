@@ -13,11 +13,11 @@ import cv2
 import numpy as np
 import math
 import os
-from objloader_simple import *
+import objloader_simple as ob
 
 # Minimum number of matches that have to be found
 # to consider the recognition valid
-MIN_MATCHES = 10
+MIN_MATCHES = 130
 
 
 def main():
@@ -28,16 +28,17 @@ def main():
     # matrix of camera parameters (made up but works quite well for me) 
     camera_parameters = np.array([[800, 0, 320], [0, 800, 240], [0, 0, 1]])
     # create ORB keypoint detector
-    orb = cv2.ORB_create()
+    orb = cv2.ORB()
     # create BFMatcher object based on hamming distance  
     bf = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True)
     # load the reference surface that will be searched in the video stream
-    dir_name = os.getcwd()
-    model = cv2.imread(os.path.join(dir_name, 'reference/model.jpg'), 0)
+    # dir_name = os.getcwd()
+    # model = cv2.imread(os.path.join(dir_name, '../reference/id.jpg'), 0)
+    model = cv2.imread('C:/Users/RG067839/Desktop/ARIOT/RPI/reference/id.jpg', 0)
     # Compute model keypoints and its descriptors
     kp_model, des_model = orb.detectAndCompute(model, None)
     # Load 3D model from OBJ file
-    obj = OBJ(os.path.join(dir_name, 'models/fox.obj'), swapyz=True)  
+    obj = ob.OBJ('C:/Users/RG067839/Desktop/ARIOT/RPI/models/fox.obj', swapyz=True)  
     # init video capture
     cap = cv2.VideoCapture(0)
 

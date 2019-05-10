@@ -5,8 +5,11 @@ using UnityEngine;
 
 [Serializable]
 
+/* A serializable class to create a device*/
+
 public class Device 
 {
+    //switch to set the device status           
     private string Switch = "off";
     private string deviceName;
 
